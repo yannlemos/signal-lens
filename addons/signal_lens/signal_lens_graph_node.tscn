@@ -1,0 +1,12 @@
+[gd_scene load_steps=2 format=3 uid="uid://cicwkklbx7x1m"]
+
+[ext_resource type="Script" path="res://addons/signal_lens/signal_lens_graph_node.gd" id="1_p48ar"]
+
+[node name="SignalLensGraphNode" type="GraphNode"]
+offset_left = 358.0
+offset_top = 170.5
+offset_right = 383.0
+offset_bottom = 232.5
+mouse_filter = 1
+position_offset = Vector2(358, 170.5)
+script = ExtResource("1_p48ar")
