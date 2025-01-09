@@ -17,6 +17,8 @@ Signal Lens can be installed from source of from the Godot Asset Library.
 3. Select the node in the remote that you wish to view in Signal Lens.
 4. Copy the global path from the node and insert it into the "Node Path" text field inside Signal Lens' panel.
 5. Press the Inspect button to render the graph.
+6. Click a node to highlight all its connections.
+7. Click a signal or a callable inside a node to highlight its specific connections.
 
 The rendered graph will display all the target node's signals, be them custom or built-in. They will be connected to other nodes that represent other objects in the scene tree, pointing their exact callable signature.
 
