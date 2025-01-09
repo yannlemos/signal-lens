@@ -8,7 +8,7 @@ It doesn't matter if that node is an autoload, or if the signal's are built-in, 
 
 ## Installation
 
-Signal Lens can be installed from source of from the Godot Asset Library.
+Signal Lens can be installed from source or from the Godot Asset Library.
 
 ## How To Use
 
