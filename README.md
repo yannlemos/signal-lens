@@ -1,6 +1,8 @@
 # Signal Lens
 
-Signal Lens is a plugin for Godot 4.3. It is a visual debugger for signal connections.
+Signal Lens is a plugin for Godot 4.3. 
+
+It is a visual debugger for signal connections.
 Given any node in a remote scene, it will render a graph with all the connections to that node's signals.
 It doesn't matter if that node is an autoload, or if the signal's are built-in, or custom made - Signal Lens will draw it all when given the node's global path in the remote.
 
@@ -44,5 +46,6 @@ If you encounter any issues, please log a bug on the issues tab.
 ## Credits
 
 Code written by Yann Lemos, released under the MIT license.
+Special thanks to my friends at Studio Bravarda.
 
 Godot Logo (C) Andrea Calabró, distributed under the terms of the Creative Commons Attribution 4.0 International License (CC-BY-4.0 International) <https://creativecommons.org/licenses/by/4.0/>
