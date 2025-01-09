@@ -51,6 +51,9 @@ func draw_data(data: Array):
 	# Clear graph to avoid drawing over old data
 	clear_graph()
 	
+	# TODO: Validations are needed here to avoid processing possible
+	# invalid data array structures
+	
 	# Retrieve the targeted node from the data array, which is always index 0
 	var target_node_name = data[0]
 
@@ -105,7 +108,7 @@ func draw_data(data: Array):
 				graph_edit.add_child(callable_node)
 				# We set the offsets here to se can have the descending stair effect in the resulting graph
 				# TODO: This could be a user setting
-				callable_node.position_offset += Vector2(callable_node.get_index() * 250, callable_node.get_index() * 100)
+				callable_node.position_offset += Vector2(callable_node.get_index() * 250, callable_node.get_index() * 50)
 				graph_edit.connect_node(target_node.name, current_signal_index, callable_node.name, callable_node.get_child_count() - 1)
 		# Finally, we add to the current iterator and move on to the next signal
 		current_signal_index += 1
