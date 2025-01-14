@@ -8,6 +8,8 @@ It doesn't matter if that node is an autoload, or if the signal's are built-in, 
 
 ![image](https://github.com/user-attachments/assets/bbae89de-fcba-473f-9e30-98a1f064683b)
 
+https://github.com/user-attachments/assets/487b2010-fa35-40d3-ac05-303096b3b81d
+
 ## Installation
 
 Signal Lens can be installed from source by downloading the addons folder from the repo into the addons folder in your project, or directly from the [Godot Asset Library](https://godotengine.org/asset-library/asset/3620).
