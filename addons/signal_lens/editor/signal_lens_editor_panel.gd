@@ -1,22 +1,75 @@
-## Manages the rendering of Signal Lens' debugger panel
+## Draw's Signal Lens panel in the debugger bottom tab inside Godot's editor
 ## Parses data received from the runtime autoload into
 ## a user-friendly graph of a node's signal and its connections
 @tool
-class_name SignalLensEditor
+class_name SignalLensEditorPanel
 extends Control
 
-## Emitted on user pressed "inspect" button in the debugger panel
-signal signal_bus_data_requested(node_path)
+## Written in the panel's line edit if nothing is selected and a debugger
+## session is active
+const TUTORIAL_TEXT: String = "Select a node in the remote scene"
 
-## This enum is used to set up the node's ports 
+## This enum is used to set up the graph node's ports 
 ## in a way that provides more legibility in the code
 enum Direction {LEFT, RIGHT}
 
-## Current node path being inspected
-var node_path: NodePath = "/root/SignalBus"
+## Emitted on user pressed "refresh" button
+signal node_data_requested(node_path)
 
-## Reference to the graph edit that controls the graph drawing
-@onready var graph_edit: GraphEdit = $PanelContainer/GraphEdit
+## Current node path being inspected
+var current_node: NodePath = ""
+
+## If true, ignores new incoming data from the remote tree
+## effectively locking the panel current node path
+var block_new_inspections: bool = false
+
+## Scene references
+@export var graph_edit: GraphEdit 
+@export var lock_button: Button 
+@export var node_path_line_edit: LineEdit 
+@export var refresh_button: Button 
+@export var clear_button: Button
+@export var inactive_text: Label
+
+## Requests inspection of [param current_node] in remote scene
+func request_node_data():
+	node_data_requested.emit(current_node)
+
+## Receives node signal data from remote scene
+## Data structure is detailed further below
+func receive_node_data(data: Array):
+	draw_data(data)
+
+## Sets up editor on project play
+func start_session():
+	clear_graph()
+	lock_button.unlock()
+	node_path_line_edit.placeholder_text = TUTORIAL_TEXT
+	inactive_text.hide()
+
+## Cleans up editor on project stop
+func stop_session():
+	clear_graph()
+	lock_button.disabled = true
+	refresh_button.disabled = true
+	clear_button.disabled = true
+	node_path_line_edit.text = ""
+	lock_button.unlock()
+	inactive_text.show()
+
+## Assigns a [param target_node] to internal member [param current_node]
+func assign_node_path(target_node: NodePath):
+	# If locked button is toggled, don't change the current node
+	if block_new_inspections: return
+	
+	# If incoming node is invalid, disable refreshing to avoid null nodes
+	refresh_button.disabled = target_node.is_empty()
+	
+	# Assign incoming node as the current one
+	current_node = target_node
+	
+	# Update line edit
+	node_path_line_edit.text = current_node
 
 #region Graph Rendering
 
@@ -48,8 +101,17 @@ func clear_graph():
 ## Print result: [{&"name_of_targeted_node", [{"signal": "item_rect_changed", "callables": [{ "object_name": &"Control", "callable_method": "Control::_size_changed"}]]
 ## Is is parsed and drawin into nodes, with connections established between signals and their callables
 func draw_data(data: Array):
+	# If lock button toggled on, don't draw incoming data
+	if block_new_inspections: return
+	
 	# Clear graph to avoid drawing over old data
 	clear_graph()
+	
+	# This line is super important to avoid random rendering errors
+	# It seems we need to give a small breathing room for the graph edit
+	# to fully cleanup, otherwise, artifacts from a previously rendered
+	# graph edit may appear and mess up the new drawing
+	await get_tree().create_timer(0.1).timeout
 	
 	# TODO: Validations are needed here to avoid processing possible
 	# invalid data array structures
@@ -112,6 +174,13 @@ func draw_data(data: Array):
 				graph_edit.connect_node(target_node.name, current_signal_index, callable_node.name, callable_node.get_child_count() - 1)
 		# Finally, we add to the current iterator and move on to the next signal
 		current_signal_index += 1
+	# Manage button states
+	# This is important to make sure that if a valid graph is rendered
+	# in case the buttons are disabled, they are enabled again
+	if clear_button.disabled:
+		clear_button.disabled = false
+	if lock_button.disabled:
+		lock_button.disabled = false
 
 func create_node(node_name: String, title_appendix: String = "") -> SignalLensGraphNode:
 	var new_node = SignalLensGraphNode.new()
@@ -138,20 +207,11 @@ func clean_connection_activity():
 
 #endregion
 
-#region Debugger
-
-func request_signal_bus_data():
-	signal_bus_data_requested.emit(node_path)
-
-func receive_signal_bus_data(data: Array):
-	draw_data(data)
-
-#endregion
-
 #region Signal Callbacks
 
-func _on_inspect_button_pressed() -> void:
-	request_signal_bus_data()
+func _on_refresh_button_pressed() -> void:
+	if current_node.is_empty(): return
+	request_node_data()
 
 func _on_signal_button_pressed(graph_node: GraphNode, internal_index: int):
 	graph_edit.set_selected(null)
@@ -172,7 +232,13 @@ func _on_graph_edit_node_deselected(node: Node) -> void:
 		if connection["to_node"] == graph_node.name:
 			graph_edit.set_connection_activity(connection["from_node"], connection["from_port"],  connection["to_node"], connection["to_port"], 0)
 
-func _on_node_path_line_edit_text_changed(new_text: String) -> void:
-	node_path = new_text
+func _on_clear_button_pressed() -> void:
+	clear_graph()
+
+func _on_repo_button_pressed() -> void:
+	OS.shell_open("https://github.com/yannlemos/signal-lens")
+
+func _on_lock_button_toggled(toggled_on: bool) -> void:
+	block_new_inspections = toggled_on
 
 #endregion

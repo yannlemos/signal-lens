@@ -1,91 +1,82 @@
-## Responsible for Signal Lens' initialization as an editor plugin for and
-## registering the editor callbacks for both editor debugger and the runtime autoload
-## that are critical for the plugin to run
+## Initializes Signal Lens plugin and its internal components
 @tool
 extends EditorPlugin
 
+## Preloaded reference to the editor panel that will be added to 
+## Godot's debugger bottom panel
+const SIGNAL_LENS_EDITOR_PANEL = preload("res://addons/signal_lens/editor/signal_lens_editor_panel.tscn")
+
+## Name of autoload node/class that will be instantiated in the remote scene
+## so we can retrieve/send data to it
 const AUTOLOAD_NAME = "SignalLens"
-var signal_lens_debugger = SignalLensDebugger.new()
 
-#region Plugin Callbacks
+## Debugger object that listens to Godot's callbacks
+var debugger: SignalLensDebugger = null
 
-func _on_node_selected(node_path: NodePath) -> void:
-	signal_lens_debugger.editor.signal_bus_data_requested.emit(node_path)
+## Inspector plugin that allows selecting remote scene nodes
+var remote_node_inspector: SignalLensRemoteNodeInspector = null
+
+## Editor panel that draws data received from remote scene
+var editor_panel: SignalLensEditorPanel = null
+
+## Setups the plugin and connects internal components
+## Called on enter editor scene tree
+func initialize():
+	# Create debugger and inspector objects
+	debugger = SignalLensDebugger.new()
+	remote_node_inspector = SignalLensRemoteNodeInspector.new()
+	
+	# Register plugins in the engine
+	add_inspector_plugin(remote_node_inspector)
+	add_debugger_plugin(debugger)
+	
+	# Connect node selection in scene tree to backend request for
+	# that node's signal data
+	remote_node_inspector.node_selected.connect(debugger.request_node_data_from_remote)
+	
+	# Create editor panel and add it to the debugger
+	editor_panel = SIGNAL_LENS_EDITOR_PANEL.instantiate()
+	debugger.setup_editor_panel(editor_panel)
+	
+	# Connect data received from debugger to editor panel so data can be
+	# rendered in graph form
+	debugger.received_node_data_from_remote.connect(editor_panel.draw_data)
+	
+	# Connect refresh request to debugger so we can retrieve data from
+	# currently selected node on demnad
+	editor_panel.node_data_requested.connect(debugger.request_node_data_from_remote)
+	
+	# Connect start and stop debugging signals for editor panel setup/cleanup
+	debugger.started.connect(editor_panel.start_session)
+	debugger.stopped.connect(editor_panel.stop_session)
+	
+	# Connect node selection to editor panel so line edit can reflect currently
+	# selected node's path
+	remote_node_inspector.node_selected.connect(editor_panel.assign_node_path)
+
+## Removes plugin from editor and cleans references
+func cleanup():
+	# De-register plugins from engine
+	remove_debugger_plugin(debugger)
+	remove_inspector_plugin(remote_node_inspector)
+	
+	# Remove references to initialized components
+	remote_node_inspector = null
+	debugger = null
+	editor_panel = null
+
+#region Engine Callbacks
 
 func _enter_tree() -> void:
-	add_debugger_plugin(signal_lens_debugger)
-	remote_node_inspector = RemoteNodeInspector.new()
-	remote_node_inspector.node_selected.connect(_on_node_selected)
-	add_inspector_plugin(remote_node_inspector)
+	initialize()
 
 func _exit_tree() -> void:
-	remove_debugger_plugin(signal_lens_debugger)
-	remove_inspector_plugin(remote_node_inspector)
-	remote_node_inspector = null
+	cleanup()
 
 func _enable_plugin():
-	add_autoload_singleton(AUTOLOAD_NAME, "res://addons/signal_lens/signal_lens_runtime.gd")
+	add_autoload_singleton(AUTOLOAD_NAME, "res://addons/signal_lens/autoload/signal_lens_autoload.gd")
 
 func _disable_plugin():
 	remove_autoload_singleton(AUTOLOAD_NAME)
 
 #endregion
-
-var remote_node_inspector: RemoteNodeInspector
-		
-
-class RemoteNodeInspector extends EditorInspectorPlugin:
-	signal node_selected(node_path: NodePath)
-	
-	func _can_handle(object: Object) -> bool:
-		return object.get('Node/path') != null
-		
-	func _parse_begin(object: Object) -> void:
-		node_selected.emit(object.get('Node/path'))
-
-## Backend debugger class that is necessary for debugger plugins
-## Handles debugger callbacks such as receiving and sending data 
-## to the project that is playing and setting up the debugging panel
-## inside the editor
-class SignalLensDebugger extends EditorDebuggerPlugin:
-	## Preloaded reference to the debugger panel
-	const SIGNAL_LENS_EDITOR = preload("res://addons/signal_lens/signal_lens_editor.tscn")
-	
-	## This prefix is used to separate messages from this debugger
-	## as being specific to the plugin
-	const debugger_message_prefix := "signal_lens"
-	
-	## Runtime reference to the debugger panel
-	var editor: SignalLensEditor
-		
-	## This override is necessary so you can send and receive
-	## messages from the project that is playing
-	func _has_capture(prefix):
-		return debugger_message_prefix
-	
-	## Called when project starts playing
-	func _setup_session(session_id):
-		# Instantiating the editor panel
-		editor = SIGNAL_LENS_EDITOR.instantiate()
-		# Connecting "inspect" button signal to debugger
-		var session = get_session(session_id)
-		editor.signal_bus_data_requested.connect(_on_signal_bus_data_requested.bind(session_id))
-		# Adding editor to the debugger panel
-		session.add_session_tab(editor)
-		# Connecting the debugging sessions started/end to the cleanup of
-		# the editor's graph
-		session.started.connect(editor.clear_graph)
-		session.stopped.connect(editor.clear_graph)
-	
-	## On data from autoload received, send it to the debugger panel
-	func _capture(message, data, session_id):
-		if message == "signal_lens:incoming_node_signal_data":
-			editor.receive_signal_bus_data(data)
-	
-	## Called when you press the "inspect" button in the editor
-	## Sends message with request to the autoload to find the [node_path]
-	## It will then send it back as a message to the debugger if found
-	## The message must be sent as an array, so the autoload must retrieve the [0] index
-	## on receiving the message to get the node path
-	func _on_signal_bus_data_requested(node_path, session_id: int):
-		get_session(session_id).send_message("signal_lens:node_signal_data_requested", [node_path])

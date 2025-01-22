@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dgayeoxpknqkv"
-path="res://.godot/imported/signal_lens_icon.png-d73ce0478fbe225ea48e674dde91ee37.ctex"
+uid="uid://nahgd6hkb556"
+path="res://.godot/imported/icon_lock_closed.png-8ea84a098034bdf38916836f9d4cd566.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/signal_lens/signal_lens_icon.png"
-dest_files=["res://.godot/imported/signal_lens_icon.png-d73ce0478fbe225ea48e674dde91ee37.ctex"]
+source_file="res://addons/signal_lens/icons/icon_lock_closed.png"
+dest_files=["res://.godot/imported/icon_lock_closed.png-8ea84a098034bdf38916836f9d4cd566.ctex"]
 
 [params]
 

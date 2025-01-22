@@ -1,0 +1,45 @@
+[gd_scene load_steps=2 format=3 uid="uid://ds8cfe4b5j2x6"]
+
+[ext_resource type="Script" path="res://addons/signal_lens/test_scene/signal_lens_test_scene.gd" id="1_3ongb"]
+
+[node name="SignalLensTestScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_3ongb")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -62.0
+offset_top = -29.0
+offset_right = 62.0
+offset_bottom = 29.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AddButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Add to counter"
+
+[node name="Counter" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/Counter"]
+layout_mode = 2
+text = "Total times clicked: "
+
+[node name="CounterValueLabel" type="Label" parent="VBoxContainer/Counter"]
+layout_mode = 2
+text = "0"
+
+[connection signal="counter_updated" from="." to="." method="_on_counter_updated"]
+[connection signal="pressed" from="VBoxContainer/AddButton" to="." method="_on_add_button_pressed"]
+[connection signal="focus_entered" from="VBoxContainer/Counter/CounterValueLabel" to="." method="_on_counter_value_label_focus_entered"]
