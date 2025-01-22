@@ -11,12 +11,13 @@ config_version=5
 [application]
 
 config/name="Signal Lens"
+run/main_scene="res://addons/signal_lens/test_scene/signal_lens_test_scene.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
-SignalLens="*res://addons/signal_lens/signal_lens_runtime.gd"
+SignalLens="*res://addons/signal_lens/autoload/signal_lens_autoload.gd"
 
 [editor_plugins]
 

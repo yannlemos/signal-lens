@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dgayeoxpknqkv"
-path="res://.godot/imported/signal_lens_icon.png-d73ce0478fbe225ea48e674dde91ee37.ctex"
+path="res://.godot/imported/icon_monogram.png-7d0e77813dbd8089a5f529fe0e619493.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/signal_lens/signal_lens_icon.png"
-dest_files=["res://.godot/imported/signal_lens_icon.png-d73ce0478fbe225ea48e674dde91ee37.ctex"]
+source_file="res://addons/signal_lens/icons/icon_monogram.png"
+dest_files=["res://.godot/imported/icon_monogram.png-7d0e77813dbd8089a5f529fe0e619493.ctex"]
 
 [params]
 
