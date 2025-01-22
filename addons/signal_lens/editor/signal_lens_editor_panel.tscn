@@ -157,7 +157,7 @@ theme_override_constants/margin_right = 15
 
 [node name="RepoButton" type="Button" parent="PanelContainer/MarginContainer2"]
 texture_filter = 4
-custom_minimum_size = Vector2(145.04, 37.255)
+custom_minimum_size = Vector2(145.04, 40)
 layout_mode = 2
 tooltip_text = "Click to access the plugin's repository on Github.
 Submit issues, consult documentation and contribute!"

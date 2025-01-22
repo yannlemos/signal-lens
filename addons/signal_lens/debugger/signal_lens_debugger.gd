@@ -1,29 +1,60 @@
 ## Backend debugger class that is necessary for debugger plugins
-## Handles debugger callbacks such as receiving and sending data 
-## to the project that is playing and setting up the debugging panel
-## inside the editor
+## Handles the engine's debugger callbacks for receiving and sending data
+## to the project that is playing
+## Sets up the editor panel inside the debugger tab
 class_name SignalLensDebugger 
 extends EditorDebuggerPlugin
 
+## Emitted on debugging session started
+## Can happen on engine open or on play
 signal started
+
+## Emitted when a message is received from the plugin's autoload in the remote scene
 signal received_node_data_from_remote(data)
+
+## Emitted when editor panel requests inspection for [param node_path]
 signal requested_node_data_from_remote(node_path: NodePath)
+
+## Emitted on a breakpoint activated
+## Not used yet, can be useful in the future
 signal breaked
+
+## Emitted on continued after breakpoint
+## Not used yet, can be useful in the future
 signal continued
+
+## Emitted on debugging session stopped
+## Can happen on editor quit or on stopped playing
 signal stopped
 
+## Identifier for debugger session
+## Acquired on session started and cached 
 var current_session_id: int = 0
 
-## This prefix is used to separate messages from this debugger
+## Designates debugger messages containing this preffix
 ## as being specific to the plugin
 const debugger_message_prefix := "signal_lens"
+
+## Sends data request message to remote scene with [param node_path]
+func request_node_data_from_remote(node_path: NodePath):
+	get_session(current_session_id).send_message("signal_lens:node_signal_data_requested", [node_path])
+	requested_node_data_from_remote.emit(node_path)
+
+## Appends editor panel control to Godot's debugger bottom panel
+func setup_editor_panel(editor_panel: SignalLensEditorPanel):
+	get_session(current_session_id).add_session_tab(editor_panel)
 
 ## This override is necessary so you can send and receive
 ## messages from the project that is playing
 func _has_capture(prefix):
 	return debugger_message_prefix
 
-## Called when project starts playing
+## On data from autoload received, send it to the editor panel
+func _capture(message, data, session_id):
+	if message == "signal_lens:incoming_node_signal_data":
+		received_node_data_from_remote.emit(data)
+
+## Engine callback override where we set up signals
 func _setup_session(session_id):
 	current_session_id = session_id
 	var session = get_session(current_session_id)
@@ -32,34 +63,7 @@ func _setup_session(session_id):
 	session.breaked.connect(_on_session_breaked)
 	session.continued.connect(_on_session_continued)
 
-## On data from autoload received, send it to the debugger panel
-func _capture(message, data, session_id):
-	if message == "signal_lens:incoming_node_signal_data":
-		received_node_data_from_remote.emit(data)
-	
-func _on_session_started():
-	started.emit()
-
-func _on_session_stopped():
-	stopped.emit()
-
-func _on_session_breaked():
-	breaked.emit()
-
-func _on_session_continued():
-	continued.emit()
-
-func request_node_data_from_remote(node_path: NodePath):
-	get_session(current_session_id).send_message("signal_lens:node_signal_data_requested", [node_path])
-	requested_node_data_from_remote.emit(node_path)
-
-func setup_editor_panel(editor_panel: SignalLensEditorPanel):
-	get_session(current_session_id).add_session_tab(editor_panel)
-
-### Called when you press the "inspect" button in the editor
-### Sends message with request to the autoload to find the [node_path]
-### It will then send it back as a message to the debugger if found
-### The message must be sent as an array, so the autoload must retrieve the [0] index
-### on receiving the message to get the node path
-#func _on_signal_bus_data_requested(node_path):
-	#get_session(current_session_id).send_message("signal_lens:node_signal_data_requested", [node_path])
+func _on_session_started(): started.emit()
+func _on_session_stopped(): stopped.emit()
+func _on_session_breaked(): breaked.emit()
+func _on_session_continued(): continued.emit()
