@@ -25,7 +25,7 @@ If you have any feature requests, please log a proposal in the [issues](https://
 If you encounter any problems, please log a bug on the [issues](https://github.com/yannlemos/Signal-Lens/issues) tab. <br>
 Feel free to ask questions or propose ideas in the [discussions](https://github.com/yannlemos/Signal-Lens/discussions) tab. <br>
 
-If you wish to contribute directly to the project, please fork the 1.x branch that is later than the current release (e.g. if the current release is 1.1.x, fork the 1.2 branch) and create a PR with your contribution. 
+If you wish to contribute directly to the project, fork the main branch and submit your pull request when ready. 
 I'll take a look at it as soon as possible!
 
 ## Credits
