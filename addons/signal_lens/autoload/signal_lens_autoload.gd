@@ -3,6 +3,8 @@
 ## parsed into a debugger friendly array
 extends Node
 
+var previously_targeted_node: Node
+
 ## On singleton ready in scene
 ## subscribe to the debugger panel's request
 func _ready() -> void:
@@ -24,11 +26,16 @@ func _on_node_signal_data_requested(prefix, data) -> bool:
 	if target_node == null:
 		printerr("No node found in path " + str(data[0]))
 		return false
-
+	
+	if previously_targeted_node != null:
+		if previously_targeted_node != target_node:
+			print("Should cleanup previous node's signals")
+		previously_targeted_node = target_node
+	
 	# Initialize the first piece of data that will be sent to the debugger
 	# The unique name of the targeted node
 	# This will be used to set the name of the graph node in the debugger panel
-	var target_node_name: String
+	var target_node_name: String = target_node.name
 	
 	# Initialize the array that will store the node's signal data
 	var target_node_signal_data: Array
@@ -38,7 +45,12 @@ func _on_node_signal_data_requested(prefix, data) -> bool:
 	var signal_names: Array[String]
 	for _signal in signal_list:
 		signal_names.append(_signal["name"])
-	
+		if not target_node.is_connected(_signal["name"], _on_target_node_signal_emitted):
+			if _signal["args"].size() > 0:
+				target_node.connect(_signal["name"], _on_target_node_signal_emitted.bind(target_node_name, _signal["name"]).unbind(_signal["args"].size()))
+			else:
+				target_node.connect(_signal["name"], _on_target_node_signal_emitted.bind(target_node_name, _signal["name"]))
+
 	# Iterate the signal name to allow iterating te signal connection list
 	for signal_name in signal_names:
 		var signal_connections = target_node.get_signal_connection_list(signal_name)
@@ -68,5 +80,9 @@ func _on_node_signal_data_requested(prefix, data) -> bool:
 		target_node_signal_data.append(signal_data)
 
 	# On node data ready, prepare the array as per debugger's specifications
-	EngineDebugger.send_message("signal_lens:incoming_node_signal_data", [target_node.name, target_node_signal_data])
+	EngineDebugger.send_message("signal_lens:incoming_node_signal_data", [target_node_name, target_node_signal_data])
+	
 	return true
+
+func _on_target_node_signal_emitted(node_name, signal_name):
+	EngineDebugger.send_message("signal_lens:incoming_node_signal_emission", [node_name, signal_name])

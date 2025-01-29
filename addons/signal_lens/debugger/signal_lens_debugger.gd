@@ -12,6 +12,10 @@ signal started
 ## Emitted when a message is received from the plugin's autoload in the remote scene
 signal received_node_data_from_remote(data)
 
+## TODO Documentation
+signal received_signal_emission_from_remote(data)
+
+
 ## Emitted when editor panel requests inspection for [param node_path]
 signal requested_node_data_from_remote(node_path: NodePath)
 
@@ -53,6 +57,9 @@ func _has_capture(prefix) -> bool:
 func _capture(message, data, session_id) -> bool:
 	if message == "signal_lens:incoming_node_signal_data":
 		received_node_data_from_remote.emit(data)
+		return true
+	elif message == "signal_lens:incoming_node_signal_emission":
+		received_signal_emission_from_remote.emit(data)
 		return true
 	return false
 

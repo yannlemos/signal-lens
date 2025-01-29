@@ -182,6 +182,9 @@ func draw_data(data: Array):
 	if lock_button.disabled:
 		lock_button.disabled = false
 
+func draw_emission(data: Array):
+	prints("Emission received!", data)
+
 func create_node(node_name: String, title_appendix: String = "") -> SignalLensGraphNode:
 	var new_node = SignalLensGraphNode.new()
 	new_node.name = node_name
