@@ -3,6 +3,10 @@
 ## parsed into a debugger friendly array
 extends Node
 
+# TODO Doc
+const CALLABLE_BLACK_LIST := ["::_on_signal_received"]
+const OBJECT_BLACK_LIST := ["SignalLens"]
+
 var previously_targeted_node: Node
 
 ## On singleton ready in scene
@@ -27,10 +31,10 @@ func _on_node_signal_data_requested(prefix, data) -> bool:
 		printerr("No node found in path " + str(data[0]))
 		return false
 	
-	if previously_targeted_node != null:
-		if previously_targeted_node != target_node:
-			print("Should cleanup previous node's signals")
-		previously_targeted_node = target_node
+	# Avoid error when trying to inspect root node
+	if target_node == get_tree().root:
+		push_warning("Root node inspection not supported in current version of Signal Lens.")
+		return false
 	
 	# Initialize the first piece of data that will be sent to the debugger
 	# The unique name of the targeted node
@@ -40,49 +44,49 @@ func _on_node_signal_data_requested(prefix, data) -> bool:
 	# Initialize the array that will store the node's signal data
 	var target_node_signal_data: Array
 	
-	# Make a list of the all the node's signal's names 
-	var signal_list = target_node.get_signal_list()
-	var signal_names: Array[String]
-	for _signal in signal_list:
-		signal_names.append(_signal["name"])
-		if not target_node.is_connected(_signal["name"], _on_target_node_signal_emitted):
-			if _signal["args"].size() > 0:
-				target_node.connect(_signal["name"], _on_target_node_signal_emitted.bind(target_node_name, _signal["name"]).unbind(_signal["args"].size()))
-			else:
-				target_node.connect(_signal["name"], _on_target_node_signal_emitted.bind(target_node_name, _signal["name"]))
-
-	# Iterate the signal name to allow iterating te signal connection list
-	for signal_name in signal_names:
-		var signal_connections = target_node.get_signal_connection_list(signal_name)
-		# Initialize array that will store the callable data for the current signal
-		var signal_callables: Array
-		# Iterate the signal connections to parse the signal's and their respective callables
-		for signal_connection in signal_connections:
-			var stringified_callable: String = str(signal_connection["callable"])
-			# Ignore a certain callable that pollutes the generated graph in the editor
-			if stringified_callable.contains("::_on_signal_received"): continue
-			var callable_object: Object = signal_connection["callable"].get_object()
-			var callable_name = callable_object.get("name")
-			var callable_method = str(signal_connection["callable"].get_method())
-			# Append the data to the current signal's callables
-			signal_callables.append({"object_name": callable_name, "callable_method": callable_method})
-		
-		# After all the signal connections have been parsed
-		# create a dictionary containing the signal name
-		# and all the callable's data
-		var signal_data: Dictionary = {
-			"signal": signal_name,
-			"callables": signal_callables
-		}
-		
-		# Append it to the output array
-		# and continue the process for all the node's signals
-		target_node_signal_data.append(signal_data)
+	# Get unparsed signal data from target node
+	var target_node_signal_list: Array[Dictionary] = target_node.get_signal_list()
+	# Iterate all signals in target node and parse signal data 
+	# to debugger-friendly format
+	for i in range(target_node_signal_list.size()):
+		var raw_signal_data = target_node_signal_list[i]
+		var raw_signal_connections = target_node.get_signal_connection_list(raw_signal_data["name"])
+		var parsed_signal_data: Dictionary = parse_signal_to_debugger_format(raw_signal_data, raw_signal_connections)
+		target_node_signal_data.append(parsed_signal_data)
 
 	# On node data ready, prepare the array as per debugger's specifications
 	EngineDebugger.send_message("signal_lens:incoming_node_signal_data", [target_node_name, target_node_signal_data])
-	
 	return true
+
+func parse_signal_to_debugger_format(raw_signal_data: Dictionary, raw_signal_connections):
+	# Raw signal data is formatted as:
+	# [name] is the name of the method, as a String
+	# [args] is an Array of dictionaries representing the arguments
+	# [default_args] is the default arguments as an Array of variants
+	# [flags] is a combination of MethodFlags
+	# [id] is the method's internal identifier int
+	# [return] is the returned value, as a Dictionary;
+	var parsed_signal_name: String = raw_signal_data["name"]
+	# Raw signal connection connection is formatted as:
+	# [signal] is a reference to the Signal;
+	# [callable] is a reference to the connected Callable;
+	# [flags] is a combination of ConnectFlags.
+	var parsed_signal_callables: Array[Dictionary]
+	# Iterate all connections of signal to parse callables
+	for raw_signal_connection: Dictionary in raw_signal_connections:
+		var parsed_callable_object_name: String = raw_signal_connection["callable"].get_object().get("name")
+		var parsed_callable_method_name = str(raw_signal_connection["callable"].get_method())
+		var parsed_callable_data = {
+			"object_name": parsed_callable_object_name, 
+			"method_name": parsed_callable_method_name
+			}
+		parsed_signal_callables.append(parsed_callable_data)
+	# Create dictionary from parsed data
+	var parsed_signal_data: Dictionary = {
+			"signal": parsed_signal_name,
+			"callables": parsed_signal_callables
+		}
+	return parsed_signal_data
 
 func _on_target_node_signal_emitted(node_name, signal_name):
 	EngineDebugger.send_message("signal_lens:incoming_node_signal_emission", [node_name, signal_name])

@@ -140,7 +140,7 @@ func draw_data(data: Array):
 		var callables_for_current_signal = signal_data["callables"]
 		for callable_index in range(callables_for_current_signal.size()):
 			var object_name: String = callables_for_current_signal[callable_index]["object_name"]
-			var callable_method: String = callables_for_current_signal[callable_index]["callable_method"]
+			var callable_method: String = callables_for_current_signal[callable_index]["method_name"]
 			# If a node has already been created for the object that owns the callable
 			# Then we don't create an entirely new node
 			# Otherwise, we create a new node
@@ -184,6 +184,47 @@ func draw_data(data: Array):
 
 func draw_emission(data: Array):
 	prints("Emission received!", data)
+	#get_port_index_from_signal_name(data[0])
+	#var graph_node = graph_edit.get_node(current_node.)
+	var target_node: GraphNode = graph_edit.get_child(1)
+	var port_index = get_port_index_from_signal_name(data[1])
+	if port_index == -1: return
+	#print(port_index)
+	for connection in graph_edit.get_connection_list():
+		if connection["from_node"] == target_node.name:
+			pulse_connection(target_node.name, port_index, connection["to_node"], connection["to_port"])
+
+func get_port_index_from_signal_name(signal_name: String):
+	print(signal_name)
+	var target_node = graph_edit.get_child(1)
+	for child in target_node.get_children():
+		print(child.name)
+		if child.name == signal_name:
+			return child.get_index() - 1
+	return -1
+
+func pulse_connection(from_node: StringName, from_port: int, to_node: String, to_port: int):
+	for connection in graph_edit.get_connection_list():
+		if connection["from_node"] == from_node && connection["from_port"] == from_port && connection["to_node"] == to_node && connection["to_port"] == to_port:
+			animate_connection_activity(connection)
+
+func animate_connection_activity(connection: Dictionary, target: float = 1.0, duration: float = 0.25) -> void:
+	var tween := create_tween()
+	var from_node = connection["from_node"]
+	var from_port = connection["from_port"]
+	var to_node = connection["to_node"]
+	var to_port = connection["to_port"]
+
+	tween.tween_method(
+		func(value): graph_edit.set_connection_activity(from_node, from_port, to_node, to_port, value),
+		0.0, target, duration * 0.5
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	
+	tween.tween_method(
+		func(value): graph_edit.set_connection_activity(from_node, from_port, to_node, to_port, value),
+		target, 0.0, duration * 0.5
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
 
 func create_node(node_name: String, title_appendix: String = "") -> SignalLensGraphNode:
 	var new_node = SignalLensGraphNode.new()
@@ -194,6 +235,7 @@ func create_node(node_name: String, title_appendix: String = "") -> SignalLensGr
 func create_button_slot(button_text: String, parent_node: GraphNode, slot_direction: Direction, slot_color: Color):
 	var signal_button: Button = Button.new()
 	signal_button.flat = true
+	signal_button.name = button_text
 	signal_button.text = button_text
 	parent_node.add_child(signal_button)
 	signal_button.pressed.connect(_on_signal_button_pressed.bind(parent_node, signal_button.get_index()))
@@ -221,13 +263,13 @@ func _on_signal_button_pressed(graph_node: GraphNode, internal_index: int):
 	clean_connection_activity()
 	for connection in graph_edit.get_connection_list():
 		if (connection["from_node"] == graph_node.name && connection["from_port"] == internal_index) or (connection["to_node"] == graph_node.name && connection["to_port"] == internal_index):
-			graph_edit.set_connection_activity(connection["from_node"], connection["from_port"],  connection["to_node"], connection["to_port"], 0.9)
+			graph_edit.set_connection_activity(connection["from_node"], connection["from_port"],  connection["to_node"], connection["to_port"], 0.75)
 
 func _on_graph_edit_node_selected(node: Node) -> void:
 	var graph_node = node as GraphNode
 	for connection in graph_edit.get_connection_list():
 		if connection["to_node"] == graph_node.name:
-			graph_edit.set_connection_activity(connection["from_node"], connection["from_port"],  connection["to_node"], connection["to_port"], 0.9)
+			graph_edit.set_connection_activity(connection["from_node"], connection["from_port"],  connection["to_node"], connection["to_port"], 0.75)
 
 func _on_graph_edit_node_deselected(node: Node) -> void:
 	var graph_node = node as GraphNode
