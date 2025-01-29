@@ -65,5 +65,5 @@ func _setup_session(session_id):
 
 func _on_session_started(): started.emit()
 func _on_session_stopped(): stopped.emit()
-func _on_session_breaked(): breaked.emit()
+func _on_session_breaked(can_debug: bool): breaked.emit(can_debug)
 func _on_session_continued(): continued.emit()
