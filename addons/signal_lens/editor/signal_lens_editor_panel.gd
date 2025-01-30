@@ -183,24 +183,19 @@ func draw_data(data: Array):
 		lock_button.disabled = false
 
 func draw_emission(data: Array):
-	prints("Emission received!", data)
-	#get_port_index_from_signal_name(data[0])
-	#var graph_node = graph_edit.get_node(current_node.)
 	var target_node: GraphNode = graph_edit.get_child(1)
 	var port_index = get_port_index_from_signal_name(data[1])
 	if port_index == -1: return
-	#print(port_index)
 	for connection in graph_edit.get_connection_list():
 		if connection["from_node"] == target_node.name:
 			pulse_connection(target_node.name, port_index, connection["to_node"], connection["to_port"])
 
 func get_port_index_from_signal_name(signal_name: String):
-	print(signal_name)
 	var target_node = graph_edit.get_child(1)
 	for child in target_node.get_children():
-		print(child.name)
+		prints("Child name is", child.name)
 		if child.name == signal_name:
-			return child.get_index() - 1
+			return child.get_index()
 	return -1
 
 func pulse_connection(from_node: StringName, from_port: int, to_node: String, to_port: int):
