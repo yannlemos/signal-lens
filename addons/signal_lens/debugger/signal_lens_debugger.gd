@@ -31,9 +31,9 @@ signal stopped
 ## Acquired on session started and cached 
 var current_session_id: int = 0
 
-## Designates debugger messages containing this preffix
+## Designates debugger messages containing this prefix
 ## as being specific to the plugin
-const debugger_message_prefix := "signal_lens"
+const DEBUGGER_MESSAGE_PREFIX := "signal_lens"
 
 ## Sends data request message to remote scene with [param node_path]
 func request_node_data_from_remote(node_path: NodePath):
@@ -46,13 +46,15 @@ func setup_editor_panel(editor_panel: SignalLensEditorPanel):
 
 ## This override is necessary so you can send and receive
 ## messages from the project that is playing
-func _has_capture(prefix):
-	return debugger_message_prefix
+func _has_capture(prefix) -> bool:
+	return prefix == DEBUGGER_MESSAGE_PREFIX
 
 ## On data from autoload received, send it to the editor panel
-func _capture(message, data, session_id):
+func _capture(message, data, session_id) -> bool:
 	if message == "signal_lens:incoming_node_signal_data":
 		received_node_data_from_remote.emit(data)
+		return true
+	return false
 
 ## Engine callback override where we set up signals
 func _setup_session(session_id):
@@ -65,5 +67,5 @@ func _setup_session(session_id):
 
 func _on_session_started(): started.emit()
 func _on_session_stopped(): stopped.emit()
-func _on_session_breaked(): breaked.emit()
+func _on_session_breaked(can_debug: bool): breaked.emit(can_debug)
 func _on_session_continued(): continued.emit()
