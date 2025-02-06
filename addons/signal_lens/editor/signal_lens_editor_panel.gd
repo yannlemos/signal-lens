@@ -203,7 +203,9 @@ func pulse_connection(from_node: StringName, from_port: int, to_node: String, to
 		if connection["from_node"] == from_node && connection["from_port"] == from_port && connection["to_node"] == to_node && connection["to_port"] == to_port:
 			animate_connection_activity(connection)
 
-func animate_connection_activity(connection: Dictionary, target: float = 1.0, duration: float = 0.25) -> void:
+var freeze_emissions: bool = true
+
+func animate_connection_activity(connection: Dictionary, target: float = 1.0, duration: float = 1.5) -> void:
 	var tween := create_tween()
 	var from_node = connection["from_node"]
 	var from_port = connection["from_port"]
@@ -212,12 +214,14 @@ func animate_connection_activity(connection: Dictionary, target: float = 1.0, du
 
 	tween.tween_method(
 		func(value): graph_edit.set_connection_activity(from_node, from_port, to_node, to_port, value),
-		0.0, target, duration * 0.5
-	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		0.0, target, duration * 0.1
+	).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN_OUT)
+	
+	if freeze_emissions: return
 	
 	tween.tween_method(
 		func(value): graph_edit.set_connection_activity(from_node, from_port, to_node, to_port, value),
-		target, 0.0, duration * 0.5
+		target, 0.0, duration * 0.9
 	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 

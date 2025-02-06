@@ -1,11 +1,13 @@
-[gd_scene load_steps=9 format=3 uid="uid://f4ie0ytcicf0"]
+[gd_scene load_steps=11 format=3 uid="uid://f4ie0ytcicf0"]
 
 [ext_resource type="Script" path="res://addons/signal_lens/editor/signal_lens_editor_panel.gd" id="1_abwge"]
 [ext_resource type="Texture2D" uid="uid://6tme3kq6xv53" path="res://addons/signal_lens/icons/icon_clear.png" id="2_shd1a"]
 [ext_resource type="Texture2D" uid="uid://x35k7yli0rtc" path="res://addons/signal_lens/icons/icon_refresh.png" id="3_77yg3"]
 [ext_resource type="Texture2D" uid="uid://cr0vu7jtj21d2" path="res://addons/signal_lens/icons/icon_lock_open.png" id="4_o8y3g"]
-[ext_resource type="Script" path="res://addons/signal_lens/editor/signal_lens_lock_button.gd" id="5_qew8d"]
+[ext_resource type="Script" path="res://addons/signal_lens/editor/signal_lens_toggle_button.gd" id="5_qew8d"]
+[ext_resource type="Texture2D" uid="uid://nahgd6hkb556" path="res://addons/signal_lens/icons/icon_lock_closed.png" id="6_b6xyj"]
 [ext_resource type="Texture2D" uid="uid://brdnqivcfnsun" path="res://addons/signal_lens/icons/icon_logo.png" id="6_wrl4d"]
+[ext_resource type="Texture2D" uid="uid://dn6usu7uih5bn" path="res://addons/signal_lens/icons/icon_freeze.png" id="7_f7g7u"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2b25o"]
 content_margin_left = 5.0
@@ -76,6 +78,7 @@ theme_override_constants/margin_left = 10
 theme_override_constants/margin_bottom = 15
 
 [node name="HBoxContainer" type="HBoxContainer" parent="EditorPanel/MainButtonsContainer"]
+visible = false
 layout_mode = 2
 size_flags_vertical = 0
 theme_override_constants/separation = 7
@@ -132,6 +135,34 @@ icon = ExtResource("4_o8y3g")
 icon_alignment = 1
 vertical_icon_alignment = 0
 script = ExtResource("5_qew8d")
+icon_on = ExtResource("6_b6xyj")
+icon_off = ExtResource("4_o8y3g")
+
+[node name="FreezeButton" type="Button" parent="EditorPanel/MainButtonsContainer/HBoxContainer"]
+modulate = Color(1, 1, 1, 0.3)
+layout_mode = 2
+tooltip_text = "Lock Toggle
+Ignores any new selections made in the remote scene if toggled on."
+theme_override_constants/icon_max_width = 15
+disabled = true
+toggle_mode = true
+icon = ExtResource("7_f7g7u")
+icon_alignment = 1
+script = ExtResource("5_qew8d")
+icon_on = ExtResource("7_f7g7u")
+icon_off = ExtResource("7_f7g7u")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="EditorPanel/MainButtonsContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="EditorPanel/MainButtonsContainer/HBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Emission Speed"
+
+[node name="HSlider" type="HSlider" parent="EditorPanel/MainButtonsContainer/HBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_vertical = 1
 
 [node name="InactiveTextContainer" type="PanelContainer" parent="EditorPanel"]
 custom_minimum_size = Vector2(300, 50)
@@ -174,4 +205,5 @@ expand_icon = true
 [connection signal="pressed" from="EditorPanel/MainButtonsContainer/HBoxContainer/RefreshButton" to="." method="_on_refresh_button_pressed"]
 [connection signal="toggled" from="EditorPanel/MainButtonsContainer/HBoxContainer/LockButton" to="." method="_on_lock_button_toggled"]
 [connection signal="toggled" from="EditorPanel/MainButtonsContainer/HBoxContainer/LockButton" to="EditorPanel/MainButtonsContainer/HBoxContainer/LockButton" method="_on_toggled"]
+[connection signal="toggled" from="EditorPanel/MainButtonsContainer/HBoxContainer/FreezeButton" to="EditorPanel/MainButtonsContainer/HBoxContainer/FreezeButton" method="_on_toggled"]
 [connection signal="pressed" from="EditorPanel/RepoButtonContainer/RepoButton" to="." method="_on_repo_button_pressed"]
