@@ -25,7 +25,7 @@ var block_new_inspections: bool = false
 
 ## Scene references
 @export var graph_edit: GraphEdit 
-@export var lock_button: Button 
+@export var lock_checkbox: Button 
 @export var node_path_line_edit: LineEdit 
 @export var refresh_button: Button 
 @export var clear_button: Button
@@ -43,18 +43,18 @@ func receive_node_data(data: Array):
 ## Sets up editor on project play
 func start_session():
 	clear_graph()
-	lock_button.unlock()
+	lock_checkbox.button_pressed = false
 	node_path_line_edit.placeholder_text = TUTORIAL_TEXT
 	inactive_text.hide()
 
 ## Cleans up editor on project stop
 func stop_session():
 	clear_graph()
-	lock_button.disabled = true
+	lock_checkbox.disabled = true
 	refresh_button.disabled = true
 	clear_button.disabled = true
 	node_path_line_edit.text = ""
-	lock_button.unlock()
+	lock_checkbox.button_pressed = false
 	inactive_text.show()
 
 ## Assigns a [param target_node] to internal member [param current_node]
@@ -179,8 +179,8 @@ func draw_data(data: Array):
 	# in case the buttons are disabled, they are enabled again
 	if clear_button.disabled:
 		clear_button.disabled = false
-	if lock_button.disabled:
-		lock_button.disabled = false
+	if lock_checkbox.disabled:
+		lock_checkbox.disabled = false
 
 func create_node(node_name: String, title_appendix: String = "") -> SignalLensGraphNode:
 	var new_node = SignalLensGraphNode.new()
@@ -199,7 +199,7 @@ func create_button_slot(button_text: String, parent_node: GraphNode, slot_direct
 
 func get_slot_color(slot_index, signal_amount) -> Color:
 	var hue = float(slot_index) / float(signal_amount) 
-	return Color.from_hsv(hue, 1.0, 0.5, 0.05)  
+	return Color.from_hsv(hue, 1.0, 0.5, 0.5)  
 
 func clean_connection_activity():
 	for connection in graph_edit.get_connection_list():
@@ -238,7 +238,7 @@ func _on_clear_button_pressed() -> void:
 func _on_repo_button_pressed() -> void:
 	OS.shell_open("https://github.com/yannlemos/signal-lens")
 
-func _on_lock_button_toggled(toggled_on: bool) -> void:
+func _on_lock_checkbox_toggled(toggled_on: bool) -> void:
 	block_new_inspections = toggled_on
 
 #endregion
