@@ -8,7 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://c3d2dcu7sofv3" path="res://addons/signal_lens/icons/icon_reload.svg" id="7_jobfo"]
 [ext_resource type="Texture2D" uid="uid://csx0bkn0vge5e" path="res://addons/signal_lens/icons/Timer.svg" id="7_mvc1r"]
 
-[node name="Signal Lens" type="Control" node_paths=PackedStringArray("graph_edit", "lock_checkbox", "node_path_line_edit", "refresh_button", "clear_button", "inactive_text")]
+[node name="Signal Lens" type="Control" node_paths=PackedStringArray("graph_edit", "node_path_line_edit", "refresh_button", "clear_button", "inactive_text", "lock_checkbox", "freeze_checkbox", "emission_speed_slider", "emission_speed_icon")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -17,11 +17,14 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_abwge")
 graph_edit = NodePath("EditorPanel/GraphEdit")
-lock_checkbox = NodePath("EditorPanel/MainButtonsContainer/HBoxContainer2/LockCheckbox")
 node_path_line_edit = NodePath("EditorPanel/MainButtonsContainer/HBoxContainer2/NodePathLineEdit")
 refresh_button = NodePath("EditorPanel/MainButtonsContainer/HBoxContainer2/RefreshButton")
 clear_button = NodePath("EditorPanel/MainButtonsContainer/HBoxContainer2/ClearButton")
 inactive_text = NodePath("EditorPanel/InactiveTextContainer/InactiveText")
+lock_checkbox = NodePath("EditorPanel/MainButtonsContainer/HBoxContainer2/LockCheckbox")
+freeze_checkbox = NodePath("EditorPanel/MainButtonsContainer/HBoxContainer2/FreezeCheckbox")
+emission_speed_slider = NodePath("EditorPanel/MainButtonsContainer/HBoxContainer2/EmissionSpeedContainer/EmissionSpeedSlider")
+emission_speed_icon = NodePath("EditorPanel/MainButtonsContainer/HBoxContainer2/EmissionSpeedContainer/EmissionSpeedIcon")
 
 [node name="EditorPanel" type="PanelContainer" parent="."]
 layout_mode = 1
@@ -53,10 +56,12 @@ theme_override_constants/separation = 10
 
 [node name="ClearButton" type="Button" parent="EditorPanel/MainButtonsContainer/HBoxContainer2"]
 layout_mode = 2
+disabled = true
 icon = ExtResource("6_ihxmu")
 
 [node name="RefreshButton" type="Button" parent="EditorPanel/MainButtonsContainer/HBoxContainer2"]
 layout_mode = 2
+disabled = true
 icon = ExtResource("7_jobfo")
 
 [node name="NodePathLineEdit" type="LineEdit" parent="EditorPanel/MainButtonsContainer/HBoxContainer2"]
@@ -64,26 +69,27 @@ custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 text = "/root"
 editable = false
-context_menu_enabled = false
 virtual_keyboard_enabled = false
 middle_mouse_paste_enabled = false
-selecting_enabled = false
 deselect_on_focus_loss_enabled = false
 drag_and_drop_selection_enabled = false
 select_all_on_focus = true
 
 [node name="LockCheckbox" type="CheckButton" parent="EditorPanel/MainButtonsContainer/HBoxContainer2"]
 layout_mode = 2
+disabled = true
 icon = ExtResource("5_anldl")
 
 [node name="FreezeCheckbox" type="CheckButton" parent="EditorPanel/MainButtonsContainer/HBoxContainer2"]
 layout_mode = 2
+disabled = true
 icon = ExtResource("5_0vtfk")
 
 [node name="EmissionSpeedContainer" type="HBoxContainer" parent="EditorPanel/MainButtonsContainer/HBoxContainer2"]
 layout_mode = 2
 
 [node name="EmissionSpeedIcon" type="TextureRect" parent="EditorPanel/MainButtonsContainer/HBoxContainer2/EmissionSpeedContainer"]
+modulate = Color(1, 1, 1, 0.35)
 layout_mode = 2
 texture = ExtResource("7_mvc1r")
 expand_mode = 3
@@ -97,6 +103,7 @@ min_value = 0.3
 max_value = 6.0
 step = 0.1
 value = 1.0
+editable = false
 
 [node name="InactiveTextContainer" type="PanelContainer" parent="EditorPanel"]
 custom_minimum_size = Vector2(300, 50)
