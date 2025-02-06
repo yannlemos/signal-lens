@@ -9,9 +9,12 @@ extends Control
 ## session is active
 const TUTORIAL_TEXT: String = "Select a node in the remote scene"
 
-## TODO doc
+## Default duration a signal emission pulse in seconds
+## TODO: This could be a user setting
 const DEFAULT_EMISSION_DURATION: float = 1.0
 
+## Default opacity of a connection line in the graph when rendered
+## TODO: This could be a user setting
 const DEFAULT_CONNECTION_OPACITY: float = 0.3
 
 ## This enum is used to set up the graph node's ports 
@@ -28,15 +31,18 @@ var current_node: NodePath = ""
 ## effectively locking the panel current node path
 var block_new_inspections: bool = false
 
-## TODO doc
+## If true, all incoming signal emissions will be drawn and won't fade out
 var freeze_emissions: bool = false
 
-## TODO doc
+## Multiplier that increases or decreases emission drawing speed 
+## Acquired from slider in scene
 var emission_speed_multiplier: float = 1.0
 
+## Array that collects active pulse connections so that they can be
+## all cleanup together when unfreezing emissions
 var pulsing_connections: Array = []
 
-## Scene references
+# Scene references
 @export var graph_edit: GraphEdit 
 @export var node_path_line_edit: LineEdit 
 @export var refresh_button: Button 
@@ -136,9 +142,6 @@ func draw_node_data(data: Array):
 	# graph edit may appear and mess up the new drawing
 	await get_tree().create_timer(0.1).timeout
 	
-	# TODO: Validations are needed here to avoid processing possible
-	# invalid data array structures
-	
 	# Retrieve the targeted node from the data array, which is always index 0
 	var target_node_name = data[0]
 
@@ -210,6 +213,34 @@ func draw_node_data(data: Array):
 		emission_speed_slider.editable = true
 		emission_speed_icon.modulate = Color(emission_speed_icon.modulate, 1.0)
 
+func create_node(node_name: String, title_appendix: String = "") -> SignalLensGraphNode:
+	var new_node = SignalLensGraphNode.new()
+	new_node.name = node_name
+	new_node.title = node_name + " " + title_appendix
+	return new_node
+
+func create_button_slot(button_text: String, parent_node: GraphNode, slot_direction: Direction, slot_color: Color):
+	var signal_button: Button = Button.new()
+	signal_button.flat = true
+	signal_button.name = button_text
+	signal_button.text = button_text
+	parent_node.add_child(signal_button)
+	signal_button.pressed.connect(_on_signal_button_pressed.bind(parent_node, signal_button.get_index()))
+	signal_button.focus_exited.connect(clean_connection_activity)
+	parent_node.set_slot(signal_button.get_index(), slot_direction == Direction.LEFT, 0, slot_color, slot_direction == Direction.RIGHT, 0, slot_color)
+
+func get_slot_color(slot_index, signal_amount) -> Color:
+	var hue = float(slot_index) / float(signal_amount) 
+	return Color.from_hsv(hue, 1.0, 0.5, DEFAULT_CONNECTION_OPACITY)  
+
+func clean_connection_activity():
+	for connection in graph_edit.get_connection_list():
+		graph_edit.set_connection_activity(connection["from_node"], connection["from_port"],  connection["to_node"], connection["to_port"], 0)
+
+#endregion
+
+#region Signal Emission Rendering
+
 func draw_signal_emission(data: Array):
 	var target_node: GraphNode = graph_edit.get_child(1)
 	var port_index = get_port_index_from_signal_name(data[1])
@@ -218,12 +249,7 @@ func draw_signal_emission(data: Array):
 		if connection["from_node"] == target_node.name && connection["from_port"] == port_index:
 			pulse_connection(connection)
 
-func get_port_index_from_signal_name(signal_name: String):
-	var target_node = graph_edit.get_child(1)
-	for child in target_node.get_children():
-		if child.name == signal_name:
-			return child.get_index()
-	return -1
+
 
 func pulse_connection(connection: Dictionary) -> void:
 	if connection not in pulsing_connections: pulsing_connections.append(connection)
@@ -252,29 +278,12 @@ func fade_out_connection(connection: Dictionary):
 	
 	tween.tween_callback(func(): pulsing_connections.erase(connection))
 
-func create_node(node_name: String, title_appendix: String = "") -> SignalLensGraphNode:
-	var new_node = SignalLensGraphNode.new()
-	new_node.name = node_name
-	new_node.title = node_name + " " + title_appendix
-	return new_node
-
-func create_button_slot(button_text: String, parent_node: GraphNode, slot_direction: Direction, slot_color: Color):
-	var signal_button: Button = Button.new()
-	signal_button.flat = true
-	signal_button.name = button_text
-	signal_button.text = button_text
-	parent_node.add_child(signal_button)
-	signal_button.pressed.connect(_on_signal_button_pressed.bind(parent_node, signal_button.get_index()))
-	signal_button.focus_exited.connect(clean_connection_activity)
-	parent_node.set_slot(signal_button.get_index(), slot_direction == Direction.LEFT, 0, slot_color, slot_direction == Direction.RIGHT, 0, slot_color)
-
-func get_slot_color(slot_index, signal_amount) -> Color:
-	var hue = float(slot_index) / float(signal_amount) 
-	return Color.from_hsv(hue, 1.0, 0.5, DEFAULT_CONNECTION_OPACITY)  
-
-func clean_connection_activity():
-	for connection in graph_edit.get_connection_list():
-		graph_edit.set_connection_activity(connection["from_node"], connection["from_port"],  connection["to_node"], connection["to_port"], 0)
+func get_port_index_from_signal_name(signal_name: String):
+	var target_node = graph_edit.get_child(1)
+	for child in target_node.get_children():
+		if child.name == signal_name:
+			return child.get_index()
+	return -1
 
 func freeze_signal_emissions():
 	freeze_emissions = true

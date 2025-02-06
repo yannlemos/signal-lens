@@ -9,12 +9,11 @@ extends EditorDebuggerPlugin
 ## Can happen on engine open or on play
 signal started
 
-## Emitted when a message is received from the plugin's autoload in the remote scene
+## Emitted when node data is received from autoload in remote scene
 signal received_node_data_from_remote(data)
 
-## TODO Documentation
+## Emitted when signal emission data is received from autoload in remote scene
 signal received_signal_emission_from_remote(data)
-
 
 ## Emitted when editor panel requests inspection for [param node_path]
 signal requested_node_data_from_remote(node_path: NodePath)
