@@ -36,6 +36,7 @@ grow_vertical = 2
 
 [node name="GraphEdit" type="GraphEdit" parent="EditorPanel"]
 layout_mode = 2
+scroll_offset = Vector2(-527, 0)
 grid_pattern = 1
 connection_lines_thickness = 3.0
 zoom = 0.3
@@ -56,17 +57,23 @@ theme_override_constants/separation = 10
 
 [node name="ClearButton" type="Button" parent="EditorPanel/MainButtonsContainer/HBoxContainer2"]
 layout_mode = 2
+tooltip_text = "Clear Button
+Clear the graph."
 disabled = true
 icon = ExtResource("6_ihxmu")
 
 [node name="RefreshButton" type="Button" parent="EditorPanel/MainButtonsContainer/HBoxContainer2"]
 layout_mode = 2
+tooltip_text = "Refresh Button
+Redraw the graph."
 disabled = true
 icon = ExtResource("7_jobfo")
 
 [node name="NodePathLineEdit" type="LineEdit" parent="EditorPanel/MainButtonsContainer/HBoxContainer2"]
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
+tooltip_text = "Node Path
+Node path for the node that is currently selected in the remote scene."
 text = "/root"
 editable = false
 virtual_keyboard_enabled = false
@@ -77,16 +84,24 @@ select_all_on_focus = true
 
 [node name="LockCheckbox" type="CheckButton" parent="EditorPanel/MainButtonsContainer/HBoxContainer2"]
 layout_mode = 2
+tooltip_text = "Lock
+If toggled on, ignores any new selections made in the remote scene."
 disabled = true
 icon = ExtResource("5_anldl")
 
 [node name="FreezeCheckbox" type="CheckButton" parent="EditorPanel/MainButtonsContainer/HBoxContainer2"]
 layout_mode = 2
+tooltip_text = "Freeze
+If toggled on, keeps any received signal emissions drawn in the graph.
+When toggled off, drawn signal emissions will fade out."
 disabled = true
 icon = ExtResource("5_0vtfk")
 
 [node name="EmissionSpeedContainer" type="HBoxContainer" parent="EditorPanel/MainButtonsContainer/HBoxContainer2"]
 layout_mode = 2
+tooltip_text = "Emission Speed
+Controls the speed of the fade out of signal emissions.
+Left means means quick, right means long."
 
 [node name="EmissionSpeedIcon" type="TextureRect" parent="EditorPanel/MainButtonsContainer/HBoxContainer2/EmissionSpeedContainer"]
 modulate = Color(1, 1, 1, 0.35)
