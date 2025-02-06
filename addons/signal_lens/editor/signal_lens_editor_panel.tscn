@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://bbqwvfxc4p1x0" path="res://addons/signal_lens/icons/icon_clear.svg" id="6_ihxmu"]
 [ext_resource type="Texture2D" uid="uid://brdnqivcfnsun" path="res://addons/signal_lens/icons/icon_logo.png" id="6_wrl4d"]
 [ext_resource type="Texture2D" uid="uid://c3d2dcu7sofv3" path="res://addons/signal_lens/icons/icon_reload.svg" id="7_jobfo"]
-[ext_resource type="Texture2D" uid="uid://csx0bkn0vge5e" path="res://addons/signal_lens/icons/Timer.svg" id="7_mvc1r"]
+[ext_resource type="Texture2D" uid="uid://csx0bkn0vge5e" path="res://addons/signal_lens/icons/icon_timer.svg" id="7_mvc1r"]
 
 [node name="Signal Lens" type="Control" node_paths=PackedStringArray("graph_edit", "node_path_line_edit", "refresh_button", "clear_button", "inactive_text", "lock_checkbox", "freeze_checkbox", "emission_speed_slider", "emission_speed_icon")]
 layout_mode = 3
@@ -36,7 +36,6 @@ grow_vertical = 2
 
 [node name="GraphEdit" type="GraphEdit" parent="EditorPanel"]
 layout_mode = 2
-scroll_offset = Vector2(-527, 0)
 grid_pattern = 1
 connection_lines_thickness = 3.0
 zoom = 0.3

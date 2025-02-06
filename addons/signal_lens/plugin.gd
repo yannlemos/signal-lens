@@ -41,11 +41,15 @@ func initialize():
 	# Connect data received from debugger to editor panel so data can be
 	# rendered in graph form
 	debugger.received_node_data_from_remote.connect(editor_panel.draw_node_data)
+	
+	# Connect signal emissions from targeted node to editor panel
+	# so they can be rendered in the graph
 	debugger.received_signal_emission_from_remote.connect(editor_panel.draw_signal_emission)
 	
 	# Connect refresh request to debugger so we can retrieve data from
-	# currently selected node on demnad
+	# currently selected node on demand
 	editor_panel.node_data_requested.connect(debugger.request_node_data_from_remote)
+	
 	# Connect start and stop debugging signals for editor panel setup/cleanup
 	debugger.started.connect(editor_panel.start_session)
 	debugger.stopped.connect(editor_panel.stop_session)

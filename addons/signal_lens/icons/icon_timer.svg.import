@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://csx0bkn0vge5e"
-path="res://.godot/imported/Timer.svg-3f1a1d0237671ec6306788de26ced50f.ctex"
+path="res://.godot/imported/icon_timer.svg-2df9ff012f9213aa50c64177fd051902.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/signal_lens/icons/Timer.svg"
-dest_files=["res://.godot/imported/Timer.svg-3f1a1d0237671ec6306788de26ced50f.ctex"]
+source_file="res://addons/signal_lens/icons/icon_timer.svg"
+dest_files=["res://.godot/imported/icon_timer.svg-2df9ff012f9213aa50c64177fd051902.ctex"]
 
 [params]
 
