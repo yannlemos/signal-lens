@@ -207,8 +207,8 @@ func draw_node_data(data: Array):
 	if freeze_checkbox.disabled:
 		freeze_checkbox.disabled = false
 	if emission_speed_slider.editable:
-		emission_speed_slider.editable = false
-		emission_speed_icon.modulate = Color(emission_speed_icon.modulate, 0.35)
+		emission_speed_slider.editable = true
+		emission_speed_icon.modulate = Color(emission_speed_icon.modulate, 1.0)
 
 func draw_signal_emission(data: Array):
 	var target_node: GraphNode = graph_edit.get_child(1)
@@ -225,30 +225,29 @@ func get_port_index_from_signal_name(signal_name: String):
 			return child.get_index()
 	return -1
 
-func pulse_connection(connection: Dictionary, target: float = 1.0, duration: float = DEFAULT_EMISSION_DURATION) -> void:
+func pulse_connection(connection: Dictionary) -> void:
 	if connection not in pulsing_connections: pulsing_connections.append(connection)
 	
-	var emission_duration = duration * emission_speed_multiplier
 	var from_node = connection["from_node"]
 	var from_port = connection["from_port"]
 	var to_node = connection["to_node"]
 	var to_port = connection["to_port"]
 	
 	if freeze_emissions: 
-		graph_edit.set_connection_activity(from_node, from_port, to_node, to_port, target)
+		graph_edit.set_connection_activity(from_node, from_port, to_node, to_port, 1.0)
 	else:
 		fade_out_connection(connection)
 
 func fade_out_connection(connection: Dictionary):
 	var tween := create_tween()
-	
+	var fade_out_duration = DEFAULT_EMISSION_DURATION * emission_speed_multiplier
 	var from_node = connection["from_node"]
 	var from_port = connection["from_port"]
 	var to_node = connection["to_node"]
 	var to_port = connection["to_port"]
 	
 	tween.tween_method(
-		func(value): graph_edit.set_connection_activity(from_node, from_port, to_node, to_port, value), 1.0, 0.0, DEFAULT_EMISSION_DURATION
+		func(value): graph_edit.set_connection_activity(from_node, from_port, to_node, to_port, value), 1.0, 0.0, fade_out_duration
 	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	
 	tween.tween_callback(func(): pulsing_connections.erase(connection))

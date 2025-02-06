@@ -92,6 +92,7 @@ func parse_signal_callables_to_debugger_format(raw_signal_connections):
 	for raw_signal_connection: Dictionary in raw_signal_connections:
 		var parsed_callable_object_name: String = raw_signal_connection["callable"].get_object().get("name")
 		var parsed_callable_method_name = str(raw_signal_connection["callable"].get_method())
+		if parsed_callable_method_name == "_on_target_node_signal_emitted": continue
 		var parsed_callable_data = {
 			"object_name": parsed_callable_object_name, 
 			"method_name": parsed_callable_method_name
