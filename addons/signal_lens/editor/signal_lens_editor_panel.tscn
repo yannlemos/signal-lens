@@ -1,14 +1,12 @@
 [gd_scene load_steps=8 format=3 uid="uid://f4ie0ytcicf0"]
 
 [ext_resource type="Script" path="res://addons/signal_lens/editor/signal_lens_editor_panel.gd" id="1_abwge"]
+[ext_resource type="Texture2D" uid="uid://cqov1ma4i73db" path="res://addons/signal_lens/icons/icon_freeze.svg" id="5_0vtfk"]
 [ext_resource type="Texture2D" uid="uid://bbimpssvtljcq" path="res://addons/signal_lens/icons/icon_lock.svg" id="5_anldl"]
 [ext_resource type="Texture2D" uid="uid://bbqwvfxc4p1x0" path="res://addons/signal_lens/icons/icon_clear.svg" id="6_ihxmu"]
 [ext_resource type="Texture2D" uid="uid://brdnqivcfnsun" path="res://addons/signal_lens/icons/icon_logo.png" id="6_wrl4d"]
 [ext_resource type="Texture2D" uid="uid://c3d2dcu7sofv3" path="res://addons/signal_lens/icons/icon_reload.svg" id="7_jobfo"]
 [ext_resource type="Texture2D" uid="uid://csx0bkn0vge5e" path="res://addons/signal_lens/icons/Timer.svg" id="7_mvc1r"]
-
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_ba24d"]
-load_path = "res://.godot/imported/icon_freeze.svg-290320d7c0d2f555061c3a8857046dfa.ctex"
 
 [node name="Signal Lens" type="Control" node_paths=PackedStringArray("graph_edit", "lock_checkbox", "node_path_line_edit", "refresh_button", "clear_button", "inactive_text")]
 layout_mode = 3
@@ -79,12 +77,10 @@ layout_mode = 2
 icon = ExtResource("5_anldl")
 
 [node name="FreezeCheckbox" type="CheckButton" parent="EditorPanel/MainButtonsContainer/HBoxContainer2"]
-visible = false
 layout_mode = 2
-icon = SubResource("CompressedTexture2D_ba24d")
+icon = ExtResource("5_0vtfk")
 
 [node name="EmissionSpeedContainer" type="HBoxContainer" parent="EditorPanel/MainButtonsContainer/HBoxContainer2"]
-visible = false
 layout_mode = 2
 
 [node name="EmissionSpeedIcon" type="TextureRect" parent="EditorPanel/MainButtonsContainer/HBoxContainer2/EmissionSpeedContainer"]
@@ -97,10 +93,10 @@ stretch_mode = 3
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 size_flags_vertical = 1
-min_value = 1.0
-step = 10.0
-value = 51.0
-rounded = true
+min_value = 0.3
+max_value = 6.0
+step = 0.1
+value = 1.0
 
 [node name="InactiveTextContainer" type="PanelContainer" parent="EditorPanel"]
 custom_minimum_size = Vector2(300, 50)
@@ -141,4 +137,6 @@ expand_icon = true
 [connection signal="pressed" from="EditorPanel/MainButtonsContainer/HBoxContainer2/ClearButton" to="." method="_on_clear_button_pressed"]
 [connection signal="pressed" from="EditorPanel/MainButtonsContainer/HBoxContainer2/RefreshButton" to="." method="_on_refresh_button_pressed"]
 [connection signal="toggled" from="EditorPanel/MainButtonsContainer/HBoxContainer2/LockCheckbox" to="." method="_on_lock_checkbox_toggled"]
+[connection signal="toggled" from="EditorPanel/MainButtonsContainer/HBoxContainer2/FreezeCheckbox" to="." method="_on_freeze_checkbox_toggled"]
+[connection signal="value_changed" from="EditorPanel/MainButtonsContainer/HBoxContainer2/EmissionSpeedContainer/EmissionSpeedSlider" to="." method="_on_emission_speed_slider_value_changed"]
 [connection signal="pressed" from="EditorPanel/RepoButtonContainer/RepoButton" to="." method="_on_repo_button_pressed"]

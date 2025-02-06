@@ -9,6 +9,9 @@ extends Control
 ## session is active
 const TUTORIAL_TEXT: String = "Select a node in the remote scene"
 
+## TODO doc
+const DEFAULT_EMISSION_DURATION: float = 1.0
+
 ## This enum is used to set up the graph node's ports 
 ## in a way that provides more legibility in the code
 enum Direction {LEFT, RIGHT}
@@ -22,6 +25,12 @@ var current_node: NodePath = ""
 ## If true, ignores new incoming data from the remote tree
 ## effectively locking the panel current node path
 var block_new_inspections: bool = false
+
+## TODO doc
+var freeze_emissions: bool = false
+
+## TODO doc
+var emission_speed_multiplier: float = 1.0
 
 ## Scene references
 @export var graph_edit: GraphEdit 
@@ -203,9 +212,8 @@ func pulse_connection(from_node: StringName, from_port: int, to_node: String, to
 		if connection["from_node"] == from_node && connection["from_port"] == from_port && connection["to_node"] == to_node && connection["to_port"] == to_port:
 			animate_connection_activity(connection)
 
-var freeze_emissions: bool = true
-
-func animate_connection_activity(connection: Dictionary, target: float = 1.0, duration: float = 1.5) -> void:
+func animate_connection_activity(connection: Dictionary, target: float = 1.0, duration: float = DEFAULT_EMISSION_DURATION) -> void:
+	var emission_duration = duration * emission_speed_multiplier
 	var tween := create_tween()
 	var from_node = connection["from_node"]
 	var from_port = connection["from_port"]
@@ -214,15 +222,15 @@ func animate_connection_activity(connection: Dictionary, target: float = 1.0, du
 
 	tween.tween_method(
 		func(value): graph_edit.set_connection_activity(from_node, from_port, to_node, to_port, value),
-		0.0, target, duration * 0.1
-	).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN_OUT)
+		0.0, target, 0.25
+	).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
 	
 	if freeze_emissions: return
 	
 	tween.tween_method(
 		func(value): graph_edit.set_connection_activity(from_node, from_port, to_node, to_port, value),
-		target, 0.0, duration * 0.9
-	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		target, 0.0, emission_duration
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 
 func create_node(node_name: String, title_appendix: String = "") -> SignalLensGraphNode:
@@ -284,5 +292,11 @@ func _on_repo_button_pressed() -> void:
 
 func _on_lock_checkbox_toggled(toggled_on: bool) -> void:
 	block_new_inspections = toggled_on
+
+func _on_emission_speed_slider_value_changed(value: float) -> void:
+	emission_speed_multiplier = value
+
+func _on_freeze_checkbox_toggled(toggled_on: bool) -> void:
+	freeze_emissions = toggled_on
 
 #endregion
