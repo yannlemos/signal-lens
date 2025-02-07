@@ -1,12 +1,23 @@
-# Signal Lens
+<p align="center">
+  <img width="600" alt="cover" src="https://github.com/user-attachments/assets/e9bc1a22-118b-4107-9658-ad4eb73a0d41">
+</p>
 
-Signal Lens is a plugin for Godot 4.3. 
+<p align="center">
+<b>A Visual Debugger for Signals</b><br>
+Supports Godot 4.3 and 4.4 Beta versions.
+</p>
 
-It is a visual debugger for signal connections.
-Given any node in a remote scene, it will render a graph with all the connections to that node's signals.
-It doesn't matter if that node is an autoload, or if the signal's are built-in, or custom made - Signal Lens will draw it all when given the node's global path in the remote.
+![Key](https://github.com/user-attachments/assets/7ac3506e-2553-40ec-8bfb-462868816f3e)
 
-![Pasted image 20250122152413](https://github.com/user-attachments/assets/7b51f8da-13a3-4e5c-ad0f-e427b55fecbd)
+
+## Features
+- Click on a node in the remote scene tree and instantly view all its signals' connections
+- View signal emissions in real-time as they are emitted in-game
+- Select and rearrange a graph view to inspect your signal connections
+- Freeze signal emissions so you can inspect them later
+- Modify the signal emission speed so you can fine-tune the experience for your debugging purposes
+- Supports inspection of built-in and custom signals
+- Supports inspection of built-in nodes, custom nodes and autoloads — if it's in the remote tree, you can inspect it.
 
 ## Installation
 
@@ -14,7 +25,7 @@ Signal Lens can be installed from source by downloading the addons folder from t
 
 ## How To Use
 
-https://github.com/user-attachments/assets/182b00ab-5080-4682-b0f5-b85b515748a4
+https://github.com/user-attachments/assets/94e6887f-005a-46cc-a618-678cef5f84aa
 
 1. While the project is playing, go to the debugger panel and select the "Signal Lens" tab.
 2. Select any node in the remote tree and Signal Lens will instantly draw the node's signal connections.
