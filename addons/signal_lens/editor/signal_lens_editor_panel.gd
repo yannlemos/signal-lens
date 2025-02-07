@@ -9,6 +9,14 @@ extends Control
 ## session is active
 const TUTORIAL_TEXT: String = "Select a node in the remote scene"
 
+## Default duration a signal emission pulse in seconds
+## TODO: This could be a user setting
+const DEFAULT_EMISSION_DURATION: float = 1.0
+
+## Default opacity of a connection line in the graph when rendered
+## TODO: This could be a user setting
+const DEFAULT_CONNECTION_OPACITY: float = 0.3
+
 ## This enum is used to set up the graph node's ports 
 ## in a way that provides more legibility in the code
 enum Direction {LEFT, RIGHT}
@@ -23,13 +31,27 @@ var current_node: NodePath = ""
 ## effectively locking the panel current node path
 var block_new_inspections: bool = false
 
-## Scene references
+## If true, all incoming signal emissions will be drawn and won't fade out
+var freeze_emissions: bool = false
+
+## Multiplier that increases or decreases emission drawing speed 
+## Acquired from slider in scene
+var emission_speed_multiplier: float = 1.0
+
+## Array that collects active pulse connections so that they can be
+## all cleanup together when unfreezing emissions
+var pulsing_connections: Array = []
+
+# Scene references
 @export var graph_edit: GraphEdit 
-@export var lock_button: Button 
 @export var node_path_line_edit: LineEdit 
 @export var refresh_button: Button 
 @export var clear_button: Button
 @export var inactive_text: Label
+@export var lock_checkbox: CheckButton 
+@export var freeze_checkbox: CheckButton
+@export var emission_speed_slider: Slider
+@export var emission_speed_icon: TextureRect
 
 ## Requests inspection of [param current_node] in remote scene
 func request_node_data():
@@ -38,23 +60,30 @@ func request_node_data():
 ## Receives node signal data from remote scene
 ## Data structure is detailed further below
 func receive_node_data(data: Array):
-	draw_data(data)
+	draw_node_data(data)
 
 ## Sets up editor on project play
 func start_session():
 	clear_graph()
-	lock_button.unlock()
+	lock_checkbox.button_pressed = false
+	freeze_checkbox.button_pressed = false
+	emission_speed_slider.editable = true
+	emission_speed_icon.modulate = Color(emission_speed_icon.modulate, 1.0)
 	node_path_line_edit.placeholder_text = TUTORIAL_TEXT
 	inactive_text.hide()
 
 ## Cleans up editor on project stop
 func stop_session():
 	clear_graph()
-	lock_button.disabled = true
+	lock_checkbox.disabled = true
+	freeze_checkbox.disabled = true
 	refresh_button.disabled = true
 	clear_button.disabled = true
+	emission_speed_slider.editable = false
+	emission_speed_icon.modulate = Color(emission_speed_icon.modulate, 0.35)
 	node_path_line_edit.text = ""
-	lock_button.unlock()
+	lock_checkbox.button_pressed = false
+	freeze_checkbox.button_pressed = false
 	inactive_text.show()
 
 ## Assigns a [param target_node] to internal member [param current_node]
@@ -100,7 +129,7 @@ func clear_graph():
 ## Pseudo-code: [Name of target node, [All of the node's signals and each signal's respective callables]]
 ## Print result: [{&"name_of_targeted_node", [{"signal": "item_rect_changed", "callables": [{ "object_name": &"Control", "callable_method": "Control::_size_changed"}]]
 ## Is is parsed and drawin into nodes, with connections established between signals and their callables
-func draw_data(data: Array):
+func draw_node_data(data: Array):
 	# If lock button toggled on, don't draw incoming data
 	if block_new_inspections: return
 	
@@ -112,9 +141,6 @@ func draw_data(data: Array):
 	# to fully cleanup, otherwise, artifacts from a previously rendered
 	# graph edit may appear and mess up the new drawing
 	await get_tree().create_timer(0.1).timeout
-	
-	# TODO: Validations are needed here to avoid processing possible
-	# invalid data array structures
 	
 	# Retrieve the targeted node from the data array, which is always index 0
 	var target_node_name = data[0]
@@ -140,7 +166,7 @@ func draw_data(data: Array):
 		var callables_for_current_signal = signal_data["callables"]
 		for callable_index in range(callables_for_current_signal.size()):
 			var object_name: String = callables_for_current_signal[callable_index]["object_name"]
-			var callable_method: String = callables_for_current_signal[callable_index]["callable_method"]
+			var callable_method: String = callables_for_current_signal[callable_index]["method_name"]
 			# If a node has already been created for the object that owns the callable
 			# Then we don't create an entirely new node
 			# Otherwise, we create a new node
@@ -179,8 +205,13 @@ func draw_data(data: Array):
 	# in case the buttons are disabled, they are enabled again
 	if clear_button.disabled:
 		clear_button.disabled = false
-	if lock_button.disabled:
-		lock_button.disabled = false
+	if lock_checkbox.disabled:
+		lock_checkbox.disabled = false
+	if freeze_checkbox.disabled:
+		freeze_checkbox.disabled = false
+	if emission_speed_slider.editable:
+		emission_speed_slider.editable = true
+		emission_speed_icon.modulate = Color(emission_speed_icon.modulate, 1.0)
 
 func create_node(node_name: String, title_appendix: String = "") -> SignalLensGraphNode:
 	var new_node = SignalLensGraphNode.new()
@@ -191,6 +222,7 @@ func create_node(node_name: String, title_appendix: String = "") -> SignalLensGr
 func create_button_slot(button_text: String, parent_node: GraphNode, slot_direction: Direction, slot_color: Color):
 	var signal_button: Button = Button.new()
 	signal_button.flat = true
+	signal_button.name = button_text
 	signal_button.text = button_text
 	parent_node.add_child(signal_button)
 	signal_button.pressed.connect(_on_signal_button_pressed.bind(parent_node, signal_button.get_index()))
@@ -199,11 +231,67 @@ func create_button_slot(button_text: String, parent_node: GraphNode, slot_direct
 
 func get_slot_color(slot_index, signal_amount) -> Color:
 	var hue = float(slot_index) / float(signal_amount) 
-	return Color.from_hsv(hue, 1.0, 0.5, 0.05)  
+	return Color.from_hsv(hue, 1.0, 0.5, DEFAULT_CONNECTION_OPACITY)  
 
 func clean_connection_activity():
 	for connection in graph_edit.get_connection_list():
 		graph_edit.set_connection_activity(connection["from_node"], connection["from_port"],  connection["to_node"], connection["to_port"], 0)
+
+#endregion
+
+#region Signal Emission Rendering
+
+func draw_signal_emission(data: Array):
+	var target_node: GraphNode = graph_edit.get_child(1)
+	var port_index = get_port_index_from_signal_name(data[1])
+	if port_index == -1: return
+	for connection in graph_edit.get_connection_list():
+		if connection["from_node"] == target_node.name && connection["from_port"] == port_index:
+			pulse_connection(connection)
+
+
+
+func pulse_connection(connection: Dictionary) -> void:
+	if connection not in pulsing_connections: pulsing_connections.append(connection)
+	
+	var from_node = connection["from_node"]
+	var from_port = connection["from_port"]
+	var to_node = connection["to_node"]
+	var to_port = connection["to_port"]
+	
+	if freeze_emissions: 
+		graph_edit.set_connection_activity(from_node, from_port, to_node, to_port, 1.0)
+	else:
+		fade_out_connection(connection)
+
+func fade_out_connection(connection: Dictionary):
+	var tween := create_tween()
+	var fade_out_duration = DEFAULT_EMISSION_DURATION * emission_speed_multiplier
+	var from_node = connection["from_node"]
+	var from_port = connection["from_port"]
+	var to_node = connection["to_node"]
+	var to_port = connection["to_port"]
+	
+	tween.tween_method(
+		func(value): graph_edit.set_connection_activity(from_node, from_port, to_node, to_port, value), 1.0, 0.0, fade_out_duration
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	
+	tween.tween_callback(func(): pulsing_connections.erase(connection))
+
+func get_port_index_from_signal_name(signal_name: String):
+	var target_node = graph_edit.get_child(1)
+	for child in target_node.get_children():
+		if child.name == signal_name:
+			return child.get_index()
+	return -1
+
+func freeze_signal_emissions():
+	freeze_emissions = true
+
+func unfreeze_signal_emissions():
+	for connection in pulsing_connections:
+		fade_out_connection(connection)
+	freeze_emissions = false
 
 #endregion
 
@@ -218,13 +306,13 @@ func _on_signal_button_pressed(graph_node: GraphNode, internal_index: int):
 	clean_connection_activity()
 	for connection in graph_edit.get_connection_list():
 		if (connection["from_node"] == graph_node.name && connection["from_port"] == internal_index) or (connection["to_node"] == graph_node.name && connection["to_port"] == internal_index):
-			graph_edit.set_connection_activity(connection["from_node"], connection["from_port"],  connection["to_node"], connection["to_port"], 0.9)
+			graph_edit.set_connection_activity(connection["from_node"], connection["from_port"],  connection["to_node"], connection["to_port"], 0.75)
 
 func _on_graph_edit_node_selected(node: Node) -> void:
 	var graph_node = node as GraphNode
 	for connection in graph_edit.get_connection_list():
 		if connection["to_node"] == graph_node.name:
-			graph_edit.set_connection_activity(connection["from_node"], connection["from_port"],  connection["to_node"], connection["to_port"], 0.9)
+			graph_edit.set_connection_activity(connection["from_node"], connection["from_port"],  connection["to_node"], connection["to_port"], 0.75)
 
 func _on_graph_edit_node_deselected(node: Node) -> void:
 	var graph_node = node as GraphNode
@@ -238,7 +326,16 @@ func _on_clear_button_pressed() -> void:
 func _on_repo_button_pressed() -> void:
 	OS.shell_open("https://github.com/yannlemos/signal-lens")
 
-func _on_lock_button_toggled(toggled_on: bool) -> void:
+func _on_lock_checkbox_toggled(toggled_on: bool) -> void:
 	block_new_inspections = toggled_on
+
+func _on_emission_speed_slider_value_changed(value: float) -> void:
+	emission_speed_multiplier = value
+
+func _on_freeze_checkbox_toggled(toggled_on: bool) -> void:
+	if toggled_on:
+		freeze_signal_emissions()
+	else:
+		unfreeze_signal_emissions()
 
 #endregion

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cr0vu7jtj21d2"
-path="res://.godot/imported/icon_lock_open.png-36455a78fc3109632a4c1f2add6d69f7.ctex"
+uid="uid://csx0bkn0vge5e"
+path="res://.godot/imported/icon_timer.svg-2df9ff012f9213aa50c64177fd051902.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/signal_lens/icons/icon_lock_open.png"
-dest_files=["res://.godot/imported/icon_lock_open.png-36455a78fc3109632a4c1f2add6d69f7.ctex"]
+source_file="res://addons/signal_lens/icons/icon_timer.svg"
+dest_files=["res://.godot/imported/icon_timer.svg-2df9ff012f9213aa50c64177fd051902.ctex"]
 
 [params]
 
@@ -32,3 +32,6 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
+svg/scale=1.0
+editor/scale_with_editor_scale=false
+editor/convert_colors_with_editor_theme=false
